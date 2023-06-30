@@ -109,7 +109,7 @@ def train():
         #               'eval': EvalDataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left')},
         data_collator=DataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left'),
         train_dataset=train_dataset,
-        #eval_dataset=eval_dataset,
+        eval_dataset=None,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
