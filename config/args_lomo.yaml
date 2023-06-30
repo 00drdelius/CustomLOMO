@@ -12,7 +12,7 @@ data_max_length: 1024
 tag: 'lomo'
 output_dir: 'outputs'
 overwrite_output_dir: true
-deepspeed: 'config/ds_config.json'
+deepspeed: '.../config/ds_config.json'
 do_train: true
 do_eval: true
 evaluation_strategy: 'epoch'
@@ -36,3 +36,7 @@ group_by_length: false
 dataloader_pin_memory: false
 gradient_checkpointing: true
 predict_with_generate: false
+
+#wandb config
+wandb_project: "lomo"
+wandb_entity: "delius-co"

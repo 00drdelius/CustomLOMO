@@ -67,3 +67,9 @@ class MyTrainingArguments(Seq2SeqTrainingArguments):
     lora_alpha: int = field(default=16, metadata={"help": "The alpha parameter for Lora scaling."})
     lora_dropout: float = field(default=0.05, metadata={"help": "The dropout probability for Lora layers."})
     lora_only: bool = field(default=False, metadata={"help": "Whether to use LoRA without LOMO"})
+
+
+@dataclass
+class WandbArguments:
+    wandb_project:str = field(metadata={'help':'Your wandb project name'})
+    wandb_entity:str = field(metadata={'help':'Your wandb entity name'})

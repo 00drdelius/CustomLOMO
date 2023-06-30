@@ -38,9 +38,9 @@ def train():
     torch.set_default_dtype(torch.float16)
     parser = HfArgumentParser((ModelArguments, DataArguments, MyTrainingArguments))
     if sys.argv[-1].endswith(".yaml"):
-        model_args, data_args, training_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[-1]))
+        model_args, data_args, training_args, wandb_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[-1]))
     else:
-        model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+        model_args, data_args, training_args, wandb_args = parser.parse_args_into_dataclasses()
     set_seed(training_args.seed)
 
     model_name = model_args.model_name_or_path.split('/')[-1]
@@ -72,8 +72,8 @@ def train():
         wandb_config.update(asdict(model_args))
         wandb_config.update(asdict(data_args))
         wandb.init(
-            project="collie",
-            entity='collie_exp',
+            project=wandb_args.wandb_project,
+            entity=wandb_args.wandb_entity,
             name=tag_name if hparam_name == 'output' else '_'.join([tag_name, hparam_name.replace('output_', '')]),
             config=wandb_config
         )
@@ -105,10 +105,11 @@ def train():
     trainer = LOMOTrainer(
         model=model,
         training_args=training_args,
-        data_collator={'train': DataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left'),
-                       'eval': EvalDataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left')},
+        #data_collator={'train': DataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left'),
+        #               'eval': EvalDataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left')},
+        data_collator=DataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left'),
         train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
+        #eval_dataset=eval_dataset,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
