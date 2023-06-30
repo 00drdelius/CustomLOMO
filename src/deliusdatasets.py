@@ -30,7 +30,7 @@ class CustomDataset(Dataset):
         
         save_file = os.path.join(save_dir, f"{split}.pt")
         if data_args.refresh or not os.path.exists(save_file):
-            dataset = load_dataset('json', data_files=data_args.data_dir+data_args.data_filename, split=split)
+            dataset = load_dataset('json', data_files=f"{data_args.data_dir}/{data_args.data_filename}", split=split)
             self.data = self.process(dataset, save_file)
         else:
             print('Loading data from', save_file)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     data_args.refresh = True
     train_on_inputs = False
     data_args.data_max_length = 512
-    data_args.data_dir = 'dataset/'
+    data_args.data_dir = 'dataset'
     data_args.data_filename = 'test.jsonl'
 
     tokenizer = AutoTokenizer.from_pretrained(
