@@ -102,6 +102,8 @@ def train():
     #eval_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.eval_split)
 
     # ========== 4. Initialize our Trainer. ==========
+    print(training_args.do_eval)
+    training_args.do_eval = False
     trainer = LOMOTrainer(
         model=model,
         training_args=training_args,
