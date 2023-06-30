@@ -12,8 +12,8 @@ class ModelArguments:
 
 @dataclass
 class DataArguments:
-    data_dir: str = field(default='data')
     data_filename: str = field(metadata={'help':'dataset filename'})
+    data_dir: str = field(default='data')
     dataset_name: str = field(default='dataset_name')
     refresh: bool = field(default=False, metadata={"help": "Whether to refresh the data."})
     train_on_inputs: bool = field(default=False, metadata={"help": "Whether to train on input."})
