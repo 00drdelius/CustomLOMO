@@ -97,9 +97,9 @@ def train():
     tokenizer.pad_token_id = 0
 
     # ========== 3. Preprocessing the datasets. ==========
-    dataset_info = get_dataset_info(data_args.dataset_name)
-    train_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.exemplar_split)
-    eval_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.eval_split)
+    #dataset_info = get_dataset_info(data_args.dataset_name)
+    train_dataset = MyDataset(data_args, tokenizer, split='train')
+    #eval_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.eval_split)
 
     # ========== 4. Initialize our Trainer. ==========
     trainer = LOMOTrainer(
