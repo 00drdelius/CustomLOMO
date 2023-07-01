@@ -13,21 +13,21 @@ tag: 'lomo'
 output_dir: ...
 overwrite_output_dir: false
 save_total_limit: 1
+save_steps: 1000
+save_strategy: 'steps'
 deepspeed: '.../config/ds_config.json'
 do_train: true
 do_eval: false
 evaluation_strategy: 'no'
 per_device_train_batch_size: 1
 per_device_eval_batch_size: 1
-learning_rate: 0.00003
+learning_rate: 0.00001
 weight_decay: 0
 num_train_epochs: 3
 lr_scheduler_type: 'linear'
 warmup: 0.1
 clip_grad_norm: 1.0
-save_steps: 500
-save_strategy: 'steps'
-save_total_limit: 5
+
 seed: 42
 #bf16: true
 remove_unused_columns: false
