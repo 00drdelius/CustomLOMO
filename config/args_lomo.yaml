@@ -11,7 +11,8 @@ data_max_length: 1024
 # trainer
 tag: 'lomo'
 output_dir: ...
-overwrite_output_dir: true
+overwrite_output_dir: false
+save_total_limit: 1
 deepspeed: '.../config/ds_config.json'
 do_train: true
 do_eval: false
