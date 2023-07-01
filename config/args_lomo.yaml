@@ -25,7 +25,7 @@ num_train_epochs: 10
 lr_scheduler_type: 'linear'
 warmup: 0.1
 clip_grad_norm: 1.0
-save_strategy: 'no'
+save_strategy: 'steps'
 save_total_limit: 0
 seed: 42
 #bf16: true
