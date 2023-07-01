@@ -16,6 +16,7 @@ hf_lr_scheduler_type: 'linear'
 hf_warmup: 0.05
 tag: 'lora-qv-r2-lomo'
 output_dir: 'outputs'
+save_steps: 100
 overwrite_output_dir: true
 deepspeed: 'config/ds_config_lora.json'
 do_train: true
