@@ -39,6 +39,10 @@ class MyTrainingArguments(Seq2SeqTrainingArguments):
     max_length: int = field(default=20, metadata={"help": "The maximum length of the sequence to be generated."})
     max_new_tokens: int = field(default=None, metadata={
         "help": "The maximum numbers of tokens to generate, ignoring the number of tokens in the prompt."})
+    do_train: bool = field(default=True,
+                           metadata={'help':'Whether or not to train. Default to true'})
+    do_eval: bool = field(default=False,
+                          metadata={"help":"Whether or not to use evaluation. Default to False"})
     do_sample: bool = field(default=False,
                             metadata={"help": "Whether or not to use sampling ; use greedy decoding otherwise."})
     temperature: float = field(default=1.0,

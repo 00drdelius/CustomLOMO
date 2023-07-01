@@ -18,7 +18,7 @@ python_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 print("PYTHON_PATH", python_path)
 sys.path.append(python_path)
 from log import print
-from arguments import ModelArguments, DataArguments, MyTrainingArguments
+from arguments import ModelArguments, DataArguments, MyTrainingArguments, WandbArguments
 from mydatasets import MyDataset, get_dataset_info
 from lomo_trainer import LOMOTrainer
 from utils import DataCollatorForCauselLM, EvalDataCollatorForCauselLM
@@ -36,7 +36,7 @@ def compute_metrics(all_pred, eval_dataset, eval_prefix=None):
 def train():
     # ========== 1. logs and args ==========
     torch.set_default_dtype(torch.float16)
-    parser = HfArgumentParser((ModelArguments, DataArguments, MyTrainingArguments))
+    parser = HfArgumentParser((ModelArguments, DataArguments, MyTrainingArguments, WandbArguments))
     if sys.argv[-1].endswith(".yaml"):
         model_args, data_args, training_args, wandb_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[-1]))
     else:
