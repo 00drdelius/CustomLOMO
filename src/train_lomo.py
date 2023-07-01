@@ -20,6 +20,7 @@ sys.path.append(python_path)
 from log import print
 from arguments import ModelArguments, DataArguments, MyTrainingArguments, WandbArguments
 from mydatasets import MyDataset, get_dataset_info
+from deliusdatasets import CustomDataset
 from lomo_trainer import LOMOTrainer
 from utils import DataCollatorForCauselLM, EvalDataCollatorForCauselLM
 
@@ -98,7 +99,7 @@ def train():
 
     # ========== 3. Preprocessing the datasets. ==========
     #dataset_info = get_dataset_info(data_args.dataset_name)
-    train_dataset = MyDataset(data_args, tokenizer, split='train')
+    train_dataset = CustomDataset(data_args, tokenizer, split='train')
     #eval_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.eval_split)
 
     # ========== 4. Initialize our Trainer. ==========
