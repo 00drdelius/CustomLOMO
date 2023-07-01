@@ -64,7 +64,7 @@ def train():
     if training_args.clip_loss_value and training_args.clip_loss_value > 0:
         hparam_name += '_cliploss' + str(training_args.clip_loss_value)
     # assert training_args.clip_grad_value is None or training_args.clip_loss_value is None
-    training_args.output_dir = os.path.join('outputs', tag_name, hparam_name)
+    # training_args.output_dir = os.path.join('outputs', tag_name, hparam_name)
 
     if training_args.tag == 'debug':
         os.environ['WANDB_MODE'] = 'offline'
