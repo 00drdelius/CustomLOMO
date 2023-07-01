@@ -114,21 +114,9 @@ class LOMOTrainer:
                     self.lr = self.lr_scheduler.step(self.global_step)
                     if self.training_args.clip_grad_norm is not None and self.training_args.clip_grad_norm > 0:
                         self.optimizer.grad_norm(loss)
-                        # self.gather_norm = True
-                        # self.grad_norms = []
-                        # self.loss_scaler.has_overflow_serial = False
-                        # scaled_loss = loss * self.loss_scaler.loss_scale
-                        #
-                        # scaled_loss.backward()
-                        # # update the last one since the hook function will not be called for the last parameter
-                        # self.grad_func(0)
 
                         if self.optimizer.loss_scaler and self.optimizer.loss_scaler.has_overflow_serial:
                             print(f"Gradient overflow, skipping step {self.global_step}")
-                            # self.loss_scaler.update_scale(overflow=True)
-                            # with torch.no_grad():
-                            #     for n, p in self.model.named_parameters():
-                            #         p.grad = None
                             self.model.optimizer.get_param_coordinator(training=True).reset_step()
                             tqb.set_postfix({'loss': loss.item()})
                             if self.allow_print:
@@ -141,20 +129,6 @@ class LOMOTrainer:
                                     step=self.global_step
                                 )
                             continue
-
-                        # with torch.no_grad():
-                        #     # The norm is computed over all gradients together, as if they were
-                        #     # concatenated into a single vector. Gradients are modified in-place.
-                        #     self.grad_norms = torch.stack(self.grad_norms)
-                        #     # device = torch.device(f"cuda:{self.training_args.local_rank}")
-                        #     # all_grad_norms = torch.zeros(self.training_args.world_size * self.grad_norms.shape[0], dtype=self.grad_norms.dtype, device=device)
-                        #     # torch.distributed.all_gather_into_tensor(all_grad_norms, self.grad_norms)
-                        #
-                        #     # total_norm = torch.norm(all_grad_norms, 2.0) / self.training_args.world_size
-                        #     total_norm = torch.norm(self.grad_norms, 2.0)
-                        #     self.clip_coef = float(self.training_args.clip_grad_norm) / (total_norm + 1e-6)
-                        #     self.clip_coef = torch.clamp(self.clip_coef, max=1.0)
-                        # self.gather_norm = False
                         else:
                             self.model.optimizer.get_param_coordinator(training=True).reset_step()
                         # 第二次forward

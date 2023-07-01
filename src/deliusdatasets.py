@@ -49,7 +49,7 @@ class CustomDataset(Dataset):
             response = data['Response']
 
             def _tokenize_fn(instruction, inputing, response):
-                example = "Order:%s\n%s\nResponse:%s" % (instruction, inputing, response)
+                example = "Instruction:%s\n%s\nResponse:%s" % (instruction, inputing, response)
                 example_tokenized = self.tokenizer.encode(example, truncation=True, max_length = self.data_args.data_max_length)
                 example_tokenized += [self.tokenizer.eos_token_id]
                 instruction_tokenized = self.tokenizer.encode(re.search(r"(.|\n)*(?=Response)", example).group())
