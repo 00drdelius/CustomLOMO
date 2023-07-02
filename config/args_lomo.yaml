@@ -13,7 +13,7 @@ tag: 'lomo'
 output_dir: ...
 overwrite_output_dir: false
 save_total_limit: 1
-save_steps: 1000
+save_steps: 2000
 save_strategy: 'steps'
 deepspeed: '.../config/ds_config.json'
 do_train: true
