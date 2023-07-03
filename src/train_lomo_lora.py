@@ -21,6 +21,7 @@ sys.path.append(python_path)
 from log import print
 from arguments import ModelArguments, DataArguments, MyTrainingArguments
 from mydatasets import MyDataset, get_dataset_info
+from deliusdatasets import CustomDataset
 from lomo_lora_trainer import LOMOLoRATrainer
 from utils import DataCollatorForCauselLM, EvalDataCollatorForCauselLM
 
@@ -39,9 +40,9 @@ def train():
     torch.set_default_dtype(torch.bfloat16)
     parser = HfArgumentParser((ModelArguments, DataArguments, MyTrainingArguments))
     if sys.argv[-1].endswith(".yaml"):
-        model_args, data_args, training_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[-1]))
+        model_args, data_args, training_args, wandb_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[-1]))
     else:
-        model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+        model_args, data_args, training_args, wandb_args = parser.parse_args_into_dataclasses()
     set_seed(training_args.seed)
 
     model_name = model_args.model_name_or_path.split('/')[-1]
@@ -64,7 +65,7 @@ def train():
     if training_args.clip_loss_value and training_args.clip_loss_value > 0:
         hparam_name += '_cliploss' + str(training_args.clip_loss_value)
     # assert training_args.clip_grad_value is None or training_args.clip_loss_value is None
-    training_args.output_dir = os.path.join('outputs', tag_name, hparam_name)
+    # training_args.output_dir = os.path.join('outputs', tag_name, hparam_name)
 
     if training_args.tag == 'debug':
         os.environ['WANDB_MODE'] = 'offline'
@@ -73,8 +74,8 @@ def train():
         wandb_config.update(asdict(model_args))
         wandb_config.update(asdict(data_args))
         wandb.init(
-            project="collie",
-            entity='collie_exp',
+            project=wandb_args.wandb_project,
+            entity=wandb_args.wandb_entity,
             name=tag_name if hparam_name == 'output' else '_'.join([tag_name, hparam_name.replace('output_', '')]),
             config=wandb_config
         )
@@ -138,27 +139,26 @@ def train():
     tokenizer.pad_token_id = 0
 
     # ========== 3. Preprocessing the datasets. ==========
-    dataset_info = get_dataset_info(data_args.dataset_name)
-    train_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.exemplar_split)
-    # if data_args.few_shot_size != -1:
-    #     # few_shot_indices = sample(range(len(train_dataset)), data_args.few_shot_size)
-    #     train_dataset = Subset(train_dataset, range(data_args.few_shot_size))
-    eval_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.eval_split)
-    if dataset_info.test_split:
-        test_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.test_split)
-        eval_dataset = {
-            # 'validation': eval_dataset,
-            'test': test_dataset
-        }
+    # dataset_info = get_dataset_info(data_args.dataset_name)
+    # train_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.exemplar_split)
+    train_dataset = CustomDataset(data_args, tokenizer, split='train')
+
+    #eval_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.eval_split)
+    # if dataset_info.test_split:
+    #     test_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.test_split)
+    #     eval_dataset = {
+    #         # 'validation': eval_dataset,
+    #         'test': test_dataset
+    #     }
 
     # ========== 4. Initialize our Trainer. ==========
     trainer = LOMOLoRATrainer(
         model=model,
         training_args=training_args,
-        data_collator={'train': DataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left'),
-                       'eval': EvalDataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left')},
+        # data_collator={'train': DataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left'),
+        #                'eval': EvalDataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left')},
         train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
+        eval_dataset=None,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
         optimizers={'model_parameters': peft_params},
