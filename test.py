@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from transformers import HfArgumentParser
+from transformers import Trainer
 from src.arguments import ModelArguments, DataArguments, MyTrainingArguments, WandbArguments
 import sys
 import os

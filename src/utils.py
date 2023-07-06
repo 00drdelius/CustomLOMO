@@ -5,6 +5,7 @@ import numpy as np
 from torch.nn import CrossEntropyLoss
 from transformers.utils import PaddingStrategy
 from transformers.trainer import *
+import bitsandbytes as bnb
 import wandb
 
 
@@ -381,3 +382,19 @@ def get_loss(logits, labels, clip_loss_value=None):
         loss = loss_fct(shift_logits.view(shift_labels.shape[0] * shift_labels.shape[1], -1),
                         shift_labels.view(-1).cuda())
     return loss
+
+
+def find_all_linear_names(model):
+    """
+    找出所有全连接层，为所有全连接添加adapter
+    """
+    cls = bnb.nn.Linear4bit
+    lora_module_names = set()
+    for name, module in model.named_modules():
+        if isinstance(module, cls):
+            names = name.split('.')
+            lora_module_names.add(names[0] if len(names) == 1 else names[-1])
+
+    if 'lm_head' in lora_module_names:  # needed for 16-bit
+        lora_module_names.remove('lm_head')
+    return list(lora_module_names)

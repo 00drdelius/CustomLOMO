@@ -23,7 +23,7 @@ from arguments import ModelArguments, DataArguments, MyTrainingArguments, WandbA
 from mydatasets import MyDataset, get_dataset_info
 from deliusdatasets import CustomDataset
 from lomo_qlora_trainer import LOMOLoRATrainer
-from utils import DataCollatorForCauselLM, EvalDataCollatorForCauselLM
+from utils import DataCollatorForCauselLM, EvalDataCollatorForCauselLM, find_all_linear_names
 
 
 def compute_metrics(all_pred, eval_dataset, eval_prefix=None):
@@ -106,7 +106,10 @@ def train():
             continue
         non_peft_names.append(name)
         non_peft_params.append(param)
-
+        
+    #QLoRA quantization config
+    model = prepare_model_for_int8_training(model)
+    modules = find_all_linear_names(model)
     # use peft
     if training_args.peft_type is not None:
         print(f'Using peft.{training_args.peft_type}')
@@ -114,8 +117,8 @@ def train():
             peft_config = LoraConfig(
                 r=training_args.lora_r,
                 lora_alpha=training_args.lora_alpha,
-                target_modules=["q_proj", "v_proj"],
-                # target_modules=["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "down_proj", "up_proj"],
+                # target_modules=["q_proj", "v_proj"],
+                target_modules=modules,
                 lora_dropout=training_args.lora_dropout,
                 bias="none",
                 task_type=TaskType.CAUSAL_LM
@@ -125,7 +128,6 @@ def train():
             raise ValueError(f"Unknown PEFT type: {training_args.peft_type}")
         
         #-----------------------------------------Added--------------------------------------
-        model = prepare_model_for_int8_training(model)
         model = get_peft_model(model, peft_config)
         model.print_trainable_parameters()
 
