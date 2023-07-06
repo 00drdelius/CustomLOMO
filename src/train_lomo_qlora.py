@@ -108,7 +108,9 @@ def train():
         non_peft_params.append(param)
         
     #QLoRA quantization config
+    # casts all the non int8 modules to full precision (fp32) for stability
     model = prepare_model_for_int8_training(model)
+    
     modules = find_all_linear_names(model)
     # use peft
     if training_args.peft_type is not None:

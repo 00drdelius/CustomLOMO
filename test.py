@@ -4,7 +4,7 @@ from transformers import Trainer
 from src.arguments import ModelArguments, DataArguments, MyTrainingArguments, WandbArguments
 import sys
 import os
-
+from transformers.models.llama import modeling_llama
 
 
 parser = HfArgumentParser((ModelArguments, DataArguments, MyTrainingArguments, WandbArguments))
