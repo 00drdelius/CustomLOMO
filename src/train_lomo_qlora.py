@@ -37,7 +37,7 @@ def compute_metrics(all_pred, eval_dataset, eval_prefix=None):
 
 def train():
     # ========== 1. logs and args ==========
-    torch.set_default_dtype(torch.bfloat16)
+    #torch.set_default_dtype(torch.bfloat16)
     parser = HfArgumentParser((ModelArguments, DataArguments, MyTrainingArguments, WandbArguments))
     if sys.argv[-1].endswith(".yaml"):
         model_args, data_args, training_args, wandb_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[-1]))
