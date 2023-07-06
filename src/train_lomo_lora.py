@@ -7,11 +7,11 @@ from random import sample
 import torch
 from torch.utils.data import Subset
 from transformers import HfArgumentParser
-from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig, BitsAndBytesConfig
 from transformers import set_seed
 from dataclasses import asdict
 from transformers.deepspeed import HfDeepSpeedConfig
-from peft import get_peft_model, TaskType, LoraConfig
+from peft import get_peft_model, TaskType, LoraConfig, prepare_model_for_kbit_training
 import wandb
 # os.environ['WANDB_MODE'] = 'debug'
 
@@ -89,6 +89,13 @@ def train():
         model_args.model_name_or_path,
         local_files_only=True,
         config=config,
+        #-----------------------------------------Added--------------------------------------
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.bfloat16
+        )
     )
 
     peft_params = []
@@ -116,6 +123,9 @@ def train():
             model.enable_input_require_grads()
         else:
             raise ValueError(f"Unknown PEFT type: {training_args.peft_type}")
+        
+        #-----------------------------------------Added--------------------------------------
+        model = prepare_model_for_kbit_training(model)
         model = get_peft_model(model, peft_config)
         model.print_trainable_parameters()
 
