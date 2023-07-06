@@ -11,7 +11,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig, BitsAn
 from transformers import set_seed
 from dataclasses import asdict
 from transformers.deepspeed import HfDeepSpeedConfig
-from peft import get_peft_model, TaskType, LoraConfig, prepare_model_for_kbit_training
+from peft import get_peft_model, TaskType, LoraConfig, prepare_model_for_int8_training
 import wandb
 # os.environ['WANDB_MODE'] = 'debug'
 
@@ -125,7 +125,7 @@ def train():
             raise ValueError(f"Unknown PEFT type: {training_args.peft_type}")
         
         #-----------------------------------------Added--------------------------------------
-        model = prepare_model_for_kbit_training(model)
+        model = prepare_model_for_int8_training(model)
         model = get_peft_model(model, peft_config)
         model.print_trainable_parameters()
 
