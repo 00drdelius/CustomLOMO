@@ -107,7 +107,7 @@ class LOMOLoRATrainer:
 
         if not self.training_args.lora_only:
             # register inplace grad hook
-            self.grad_func = self.inplace_grad()
+            self.grad_func = self.inplace_grad_noZeRO()
             for n, p in model.named_parameters():
                 if "lora_" not in n and p.requires_grad:
                     p.register_hook(self.grad_func)
@@ -127,6 +127,36 @@ class LOMOLoRATrainer:
             # )
 
         # get_accelerator().empty_cache()
+
+    def inplace_grad_noZeRO(self):
+        # An approximation of in-place grad update with no zero3 of deepspeed
+        def func(x):
+            with torch.no_grad():
+                for n, p in self.model.named_parameters():
+                    if "lora_" in n:
+                        continue
+
+                    if p.requires_grad and p.grad is not None:
+                        if self.gather_norm:
+                            grad_fp32 = p.grad.detach().clone().to(torch.float32)
+                            self.grad_norms.append(torch.norm(grad_fp32, 2.0))
+                            p.grad = None
+                        else:
+                            if self.clip_grad_value is not None and self.clip_grad_value > 0:
+                                # Gradients are modified in-place.
+                                # Clipping gradients by their value
+                                grad_fp32.clamp_(min=-self.clip_grad_value, max=self.clip_grad_value)
+                            if self.clip_grad_norm is not None and self.clip_grad_norm > 0 and self.clip_coef is not None:
+                                # Normalize the gradient according to its norm (computed in another pass)
+                                grad_fp32.mul_(self.clip_coef)
+                            p_fp32 = p.data.to(torch.float32)
+                            p_fp32.add_(grad_fp32, alpha=-self.lr)
+                            p.data.copy_(p_fp32)
+                        p.grad = None
+            return x
+
+        return func
+
 
     def inplace_grad(self):
         # An approximation of in-place grad update under zero3 of deepspeed
