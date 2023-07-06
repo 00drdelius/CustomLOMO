@@ -93,7 +93,9 @@ class LOMOLoRATrainer:
         # if 'deepspeed' not in sys.modules:
         #     raise ModuleNotFoundError(
         #         "Detected DeepSpeed is not installed. See https://github.com/microsoft/DeepSpeed")
-
+        self.model = model
+        self.peft_optimizer = hf_optimizer
+        self.peft_lr_scheduler = hf_lr_scheduler
         # Initialize deepspeed engine
         # self.model, self.peft_optimizer, _, self.peft_lr_scheduler = deepspeed.initialize(
         #     config=training_args.deepspeed,
