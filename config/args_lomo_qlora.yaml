@@ -53,4 +53,4 @@ lora_r: 2
 
 #wandb config
 wandb_project: ...
-wandb_entity: "delius-co"#
+wandb_entity: "delius-co"
