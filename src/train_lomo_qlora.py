@@ -22,7 +22,7 @@ from log import print
 from arguments import ModelArguments, DataArguments, MyTrainingArguments, WandbArguments
 from mydatasets import MyDataset, get_dataset_info
 from deliusdatasets import CustomDataset
-from lomo_lora_trainer import LOMOLoRATrainer
+from lomo_qlora_trainer import LOMOLoRATrainer
 from utils import DataCollatorForCauselLM, EvalDataCollatorForCauselLM
 
 
