@@ -11,7 +11,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig, BitsAn
 from transformers import set_seed
 from dataclasses import asdict
 #from transformers.deepspeed import HfDeepSpeedConfig
-from peft import get_peft_model, TaskType, LoraConfig, prepare_model_for_int8_training
+from peft import get_peft_model, TaskType, LoraConfig, prepare_model_for_kbit_training
 import wandb
 # os.environ['WANDB_MODE'] = 'debug'
 
@@ -22,9 +22,10 @@ from log import print
 from arguments import ModelArguments, DataArguments, MyTrainingArguments, WandbArguments
 from mydatasets import MyDataset, get_dataset_info
 from deliusdatasets import CustomDataset
-from lomo_qlora_trainer import LOMOLoRATrainer
+from lomo_qlora_trainer import LoRATrainer
 from utils import DataCollatorForCauselLM, EvalDataCollatorForCauselLM, find_all_linear_names
-
+from QLoRACollator import SFTDataCollator
+from loss import TargetLMLoss
 
 def compute_metrics(all_pred, eval_dataset, eval_prefix=None):
     golds = [ins['answer'] for ins in eval_dataset.data]
@@ -45,40 +46,6 @@ def train():
         model_args, data_args, training_args, wandb_args = parser.parse_args_into_dataclasses()
     set_seed(training_args.seed)
 
-    model_name = model_args.model_name_or_path.split('/')[-1]
-    tag_name = '_'.join([data_args.dataset_name, model_name, training_args.tag] if training_args.tag else [data_args.dataset_name, model_name])
-    hparam_name = 'output'
-    if training_args.optim != 'sgd':
-        hparam_name += '_' + training_args.optim
-    if training_args.learning_rate != 5e-4:
-        hparam_name += '_lr' + str(training_args.learning_rate)
-    if training_args.per_device_train_batch_size != 8:
-        hparam_name += '_bs' + str(training_args.per_device_train_batch_size)
-    if training_args.lr_scheduler_type != 'linear':
-        hparam_name += '_' + training_args.lr_scheduler_type
-    if training_args.warmup != 0:
-        hparam_name += '_warmup' + str(training_args.warmup)
-    if training_args.clip_grad_norm and training_args.clip_grad_norm > 0:
-        hparam_name += '_clipnorm' + str(training_args.clip_grad_norm)
-    if training_args.clip_grad_value and training_args.clip_grad_value > 0:
-        hparam_name += '_clipgrad' + str(training_args.clip_grad_value)
-    if training_args.clip_loss_value and training_args.clip_loss_value > 0:
-        hparam_name += '_cliploss' + str(training_args.clip_loss_value)
-    # assert training_args.clip_grad_value is None or training_args.clip_loss_value is None
-    # training_args.output_dir = os.path.join('outputs', tag_name, hparam_name)
-
-    if training_args.tag == 'debug':
-        os.environ['WANDB_MODE'] = 'offline'
-    if training_args.local_rank in [-1, 0]:
-        wandb_config = copy.deepcopy(asdict(training_args))
-        wandb_config.update(asdict(model_args))
-        wandb_config.update(asdict(data_args))
-        wandb.init(
-            project=wandb_args.wandb_project,
-            entity=wandb_args.wandb_entity,
-            name=tag_name if hparam_name == 'output' else '_'.join([tag_name, hparam_name.replace('output_', '')]),
-            config=wandb_config
-        )
 
     # ========== 2. Load pretrained model and tokenizer. ==========
     #ds_config = training_args.deepspeed
@@ -103,19 +70,10 @@ def train():
             llm_int8_has_fp16_weight=False
         )
     )
-
-    peft_params = []
-    non_peft_names = []
-    non_peft_params = []
-    for name, param in model.named_parameters():
-        if param.requires_grad is False:
-            continue
-        non_peft_names.append(name)
-        non_peft_params.append(param)
         
     #QLoRA quantization config
     # casts all the non int8 modules to full precision (fp32) for stability
-    model = prepare_model_for_int8_training(model)
+    model = prepare_model_for_kbit_training(model)
     
     modules = find_all_linear_names(model)
     # use peft
@@ -135,32 +93,18 @@ def train():
         else:
             raise ValueError(f"Unknown PEFT type: {training_args.peft_type}")
         
-        #-----------------------------------------Added--------------------------------------
         model = get_peft_model(model, peft_config)
         model.print_trainable_parameters()
-
-        # unfreeze base model
-        # 包完peft之后的参数名字：base_model.model.model.layers.23.self_attn.v_proj.weight
-        # 之前的参数的名字：model.layers.23.self_attn.v_proj.weight
-        for name, param in model.named_parameters():
-            if name.split('base_model.model.')[1] in non_peft_names:
-                if not training_args.lora_only:
-                    param.requires_grad = True
-            if "lora_" in name:
-                peft_params.append(param)
-
-    torch.cuda.empty_cache()
+        model.config.torch_dtype = torch.float32
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.model_name_or_path,
         use_fast=False,
-        padding_side='left'
     )
     tokenizer.pad_token_id = 0
+    loss_func = TargetLMLoss(ignore_index=tokenizer.pad_token_id)
 
     # ========== 3. Preprocessing the datasets. ==========
-    # dataset_info = get_dataset_info(data_args.dataset_name)
-    # train_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.exemplar_split)
     train_dataset = CustomDataset(data_args, tokenizer, split='train')
 
     #eval_dataset = MyDataset(data_args, tokenizer, dataset_info, split=dataset_info.eval_split)
@@ -172,19 +116,25 @@ def train():
     #     }
 
     # ========== 4. Initialize our Trainer. ==========
-    trainer = LOMOLoRATrainer(
+    trainer = LoRATrainer(
         model=model,
-        training_args=training_args,
-        # data_collator={'train': DataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left'),
-        #                'eval': EvalDataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left')},
-        data_collator=DataCollatorForCauselLM(tokenizer, max_length=data_args.data_max_length, padding_side='left'),
+        args=training_args,
+        data_collator=SFTDataCollator(tokenizer, max_seq_length=data_args.data_max_length),
         train_dataset=train_dataset,
         eval_dataset=None,
         tokenizer=tokenizer,
-        compute_metrics=compute_metrics,
-        optimizers={'model_parameters': peft_params},
+        compute_loss=loss_func
     )
-    trainer.train()
+    print("*** starting training ***")
+    train_result = trainer.train()
+    # 保存最好的checkpoint
+    final_save_path = os.path.join(training_args.output_dir, 'final')
+    trainer.save_model(final_save_path)  # Saves the tokenizer too
+    # 保存训练指标
+    metrics = train_result.metrics
+    trainer.log_metrics("train", metrics)
+    trainer.save_metrics("train", metrics)
+    trainer.save_state()
 
 
 if __name__ == "__main__":

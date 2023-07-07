@@ -1,0 +1,13 @@
+torch
+git+https://gitee.com/drYuqian/peft.git
+git+https://gitee.com/drYuqian/accelerate.git
+git+https://gitee.com/drYuqian/transformers.git
+bitsandbytes==0.39.0
+loguru==0.7.0
+numpy==1.21.4
+pandas==1.2.5
+tqdm==4.62.3
+tensorboard
+sentencepiece
+deepspeed
+wandb

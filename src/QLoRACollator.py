@@ -2,7 +2,7 @@ from typing import Any, Dict, List
 import torch
 
 
-class CustomDataCollator:
+class SFTDataCollator(object):
     def __init__(self, tokenizer, max_seq_length):
         self.tokenizer = tokenizer
         self.max_seq_length = max_seq_length
@@ -20,7 +20,7 @@ class CustomDataCollator:
         for x in batch:
             input_ids = x['input_ids']
             attention_mask = x['attention_mask']
-            target_mask = x['target_mask']
+            target_mask = x['labels']
             padding_len = batch_max_len - len(input_ids)
             # padding
             input_ids = input_ids + [self.pad_token_id] * padding_len
@@ -45,4 +45,3 @@ class CustomDataCollator:
             'target_mask': target_mask_batch
         }
         return inputs
-
