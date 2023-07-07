@@ -5,7 +5,7 @@ from src.arguments import ModelArguments, DataArguments, MyTrainingArguments, Wa
 import sys
 import os
 from peft.tuners import lora
-from peft import PeftModel
+from peft import PeftModel, prepare_model_for_int8_training
 from torch.nn import modules
 from transformers.models.llama import modeling_llama
 

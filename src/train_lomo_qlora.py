@@ -89,6 +89,7 @@ def train():
         model_args.model_name_or_path,
         local_files_only=True,
         config=config,
+        device_map="auto",
         load_in_4bit = True,
         torch_dtype = torch.float16,
         trust_remote_code = True,
