@@ -89,12 +89,17 @@ def train():
         model_args.model_name_or_path,
         local_files_only=True,
         config=config,
+        load_in_4bit = True,
+        torch_dtype = torch.float16,
+        trust_remote_code = True,
         #-----------------------------------------Added--------------------------------------
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16
+            bnb_4bit_compute_dtype=torch.float16,
+            llm_int8_threshold=6.0,
+            llm_int8_has_fp16_weight=False
         )
     )
 
