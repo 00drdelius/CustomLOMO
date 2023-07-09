@@ -110,19 +110,6 @@ class LOMOLoRATrainer:
                 if "lora_" not in n and p.requires_grad:
                     p.register_hook(self.grad_func)
 
-            # self.dummy_optimizer = DeepSpeedZeRoOffload(
-            #     self.model.module,
-            #     timers=self.model.timers if self.model.wall_clock_breakdown() else None,
-            #     ds_config=self.model.config,
-            #     overlap_comm=self.model.zero_overlap_comm(),
-            #     prefetch_bucket_size=self.model.zero_prefetch_bucket_size(),
-            #     max_reuse_distance=self.model.zero_max_reuse_distance(),
-            #     max_live_parameters=self.model.zero_max_live_parameters(),
-            #     param_persistence_threshold=self.model.zero_param_persistence_threshold(),
-            #     model_persistence_threshold=self.model.zero_model_persistence_threshold(),
-            #     offload_param_config=self.model.zero_offload_param(),
-            #     mpu=self.model.mpu
-            # )
 
         get_accelerator().empty_cache()
 
