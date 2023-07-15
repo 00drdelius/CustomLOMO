@@ -159,9 +159,9 @@ class LOMOTrainer:
                         )
 
                     if self.training_args.save_strategy == 'steps' and self.global_step % self.training_args.save_steps == 0:
-                        self.save_model(self.global_step, exact_dir=self.training_args.output_dir)
+                        self.save_model(self.global_step, loss, exact_dir=self.training_args.output_dir)
 
-                    if epoch == self.training_args.num_train_epochs-1 and loss.item() <= 0.5:
+                    if epoch == self.training_args.num_train_epochs-1 and loss.item() <= 0.46:
                         self.save_model(self.global_step, exact_dir=self.training_args.special_output_dir)
 
                     if self.training_args.do_eval and self.training_args.evaluation_strategy == 'steps' and \
@@ -371,7 +371,7 @@ class LOMOTrainer:
             pin_memory=self.training_args.dataloader_pin_memory,
         )
 
-    def save_model(self, index, exact_dir):
+    def save_model(self, index, loss:float, exact_dir):
         if self.training_args.local_rank in [-1, 0]:
             checkpoint_dir = sorted(Path(exact_dir).glob("checkpoint-*"))
             if len(checkpoint_dir) >= self.training_args.save_total_limit:
@@ -422,5 +422,7 @@ class LOMOTrainer:
 
             with open(os.path.join(output_dir, f'pytorch_model.bin'), 'wb') as f:
                 torch.save(state_dict, f)
+                with open(Path.joinpath(output_dir, f'loss{loss}')):
+                    pass
                 print(f"Save model to {output_dir}.")
         torch.distributed.barrier()
