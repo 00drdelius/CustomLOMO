@@ -88,12 +88,14 @@ def train():
         model_args.model_name_or_path,
         local_files_only=True,
         config=config,
+        trust_remote_code = True
     )
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.model_name_or_path,
         use_fast=False,
-        padding_side='left'
+        padding_side='left',
+        trust_remote_code = True
     )
     tokenizer.pad_token_id = 0
 
