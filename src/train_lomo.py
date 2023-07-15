@@ -82,7 +82,7 @@ def train():
     # ========== 2. Load pretrained model and tokenizer. ==========
     ds_config = training_args.deepspeed
     dschf = HfDeepSpeedConfig(ds_config)
-    config = AutoConfig.from_pretrained(model_args.model_name_or_path)
+    config = AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
     config.gradient_checkpointing = training_args.gradient_checkpointing
     model = AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path,
