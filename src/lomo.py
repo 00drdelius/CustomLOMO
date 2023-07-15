@@ -75,7 +75,7 @@ class LOMO(Optimizer):
             闭包函数，用于更新模型参数的梯度。
             """
             with torch.no_grad():
-                for n, p in self.model.named_parameters():
+                for n, p in self.model.named_parameters(): # use for loop to update parameters, leading space complexity O(N) -> O(1)
                     if p.requires_grad and p.grad is not None:
                         if self.loss_scaler and self.loss_scaler.has_overflow_serial or self.loss_scaler._has_inf_or_nan(p.grad):
                             # if the overflow is detected, drop the gradient
@@ -97,7 +97,7 @@ class LOMO(Optimizer):
                                 # Normalize the gradient according to its norm (computed in another pass)
                                 grad_fp32.mul_(self.clip_coef)
                             p_fp32 = p.data.to(torch.float32)
-                            p_fp32.add_(grad_fp32, alpha=-self.lr)
+                            p_fp32.add_(grad_fp32, alpha=-self.lr) #SGD here: p_fp32 += (-self.lr*grad_fp32) 
                             p.data.copy_(p_fp32)
 
             return x
@@ -195,7 +195,7 @@ class LOMO(Optimizer):
                     p.grad = None
             return
 
-
+        # Delius annotation: gather norms over all gradients and operates gradient normalization here.
         with torch.no_grad():
             # The norm is computed over all gradients together, as if they were
             # concatenated into a single vector. Gradients are modified in-place.

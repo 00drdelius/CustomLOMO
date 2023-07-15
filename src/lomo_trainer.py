@@ -130,7 +130,7 @@ class LOMOTrainer:
                                 )
                             continue
                         else:
-                            self.model.optimizer.get_param_coordinator(training=True).reset_step()
+                            self.model.optimizer.get_param_coordinator(training=True).reset_step()           #?
                         # 第二次forward
                         outs = self.model(
                             input_ids=batch['input_ids'].cuda(),
@@ -159,7 +159,10 @@ class LOMOTrainer:
                         )
 
                     if self.training_args.save_strategy == 'steps' and self.global_step % self.training_args.save_steps == 0:
-                        self.save_model(self.global_step)
+                        self.save_model(self.global_step, exact_dir=self.training_args.output_dir)
+
+                    if epoch == self.training_args.num_train_epochs-1 and loss.item() <= 0.5:
+                        self.save_model(self.global_step, exact_dir=self.training_args.special_output_dir)
 
                     if self.training_args.do_eval and self.training_args.evaluation_strategy == 'steps' and \
                             self.global_step % self.training_args.eval_steps == 0:
@@ -172,7 +175,7 @@ class LOMOTrainer:
                             self.eval(self.global_step, epoch, self.eval_dataset, self.eval_dataloader, 'eval')
 
             if self.training_args.save_strategy == 'epoch':
-                self.save_model(epoch)
+                self.save_model(epoch, exact_dir=self.training_args.output_dir)
 
             if self.training_args.do_eval and self.training_args.evaluation_strategy == 'epoch':
                 if isinstance(self.eval_dataset, dict):
@@ -368,14 +371,14 @@ class LOMOTrainer:
             pin_memory=self.training_args.dataloader_pin_memory,
         )
 
-    def save_model(self, index):
+    def save_model(self, index, exact_dir):
         if self.training_args.local_rank in [-1, 0]:
-            checkpoint_dir = sorted(Path(self.training_args.output_dir).glob("checkpoint-*"))
+            checkpoint_dir = sorted(Path(exact_dir).glob("checkpoint-*"))
             if len(checkpoint_dir) >= self.training_args.save_total_limit:
                 shutil.rmtree(checkpoint_dir[0], ignore_errors=True)
         torch.distributed.barrier()
 
-        output_dir = os.path.join(self.training_args.output_dir, f"checkpoint-{index}")
+        output_dir = os.path.join(exact_dir, f"checkpoint-{index}")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
         state_dict = OrderedDict()
