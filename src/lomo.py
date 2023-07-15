@@ -45,7 +45,7 @@ class LOMO(Optimizer):
         else:
             self.grad_func = self.fuse_update()
         # check if fp16 is enabled
-        if p0.dtype == torch.float16:
+        if p0.dtype == (torch.float16 or torch.bfloat16):
             self.loss_scaler = DynamicLossScaler(
                 init_scale=2 ** 16,
             )  # TODO: add args
