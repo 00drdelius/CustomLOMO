@@ -25,6 +25,7 @@ class DataArguments:
 @dataclass
 class MyTrainingArguments(Seq2SeqTrainingArguments):
     tag: str = field(default=None, metadata={"help": "Tag for the experiment."})
+    special_output_dir: str = field(default=None, metadata={"help":"The output directory for speical use."})
 
     predict_with_generate: bool = field(default=False, metadata={"help": "Whether to use generate for prediction."})
 

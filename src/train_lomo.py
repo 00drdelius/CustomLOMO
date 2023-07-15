@@ -19,7 +19,7 @@ print("PYTHON_PATH", python_path)
 sys.path.append(python_path)
 from log import print
 from arguments import ModelArguments, DataArguments, MyTrainingArguments, WandbArguments
-from mydatasets import MyDataset, get_dataset_info
+#from mydatasets import MyDataset, get_dataset_info
 from deliusdatasets import CustomDataset
 from lomo_trainer import LOMOTrainer
 from utils import DataCollatorForCauselLM, EvalDataCollatorForCauselLM
