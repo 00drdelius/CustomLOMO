@@ -102,7 +102,7 @@ class LOMOTrainer:
 
             with tqdm.tqdm(self.train_dataloader, disable=not self.allow_print) as tqb:
                 for step, batch in enumerate(tqb, start=1):
-                    self.model.train()
+                    self.model.train()  #type model.train() denotes model.train=True.
                     outs = self.model(
                         input_ids=batch['input_ids'].cuda(),
                         attention_mask=batch['attention_mask'].cuda(),

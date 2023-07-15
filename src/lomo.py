@@ -183,7 +183,7 @@ class LOMO(Optimizer):
         if self.loss_scaler:
             self.loss_scaler.has_overflow_serial = False
             loss = loss * self.loss_scaler.loss_scale
-        loss.backward(retain_graph=True)
+        loss.backward(retain_graph=True) #Can only perform gradient calculations using backward once on a given graph, for performance reasons. If we need to do several backward calls on the same graph, we need to pass retain_graph=True to the backward call.
         # update the last parameter since the last parameter in the computaiton graph is not ready when calling hook functions
         # the argument of grad_func is just a placeholder, and it can be anything. 
         self.grad_func(0)
