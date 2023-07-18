@@ -1,17 +1,26 @@
-from dataclasses import dataclass, field
-from transformers import HfArgumentParser
-from transformers import Trainer
-from src.arguments import ModelArguments, DataArguments, MyTrainingArguments, WandbArguments
-import sys
-import os
-from peft.tuners import lora
-from peft import PeftModel, prepare_model_for_int8_training
-from torch.nn import modules
-from transformers.models.llama import modeling_llama
+import torch
 
-parser = HfArgumentParser((ModelArguments, DataArguments, MyTrainingArguments, WandbArguments))
-print(parser)
-model_args, data_args, train_args, wandb_args = parser.parse_yaml_file(yaml_file='config/args_lomo.yaml')
 
-print(model_args, data_args, train_args, wandb_args)
+# 模型初始化
+linear1 = torch.nn.Linear(1024,1024, bias=False).cuda() # + 4194304
+print(torch.cuda.memory_allocated())
+linear2 = torch.nn.Linear(1024, 1, bias=False).cuda() # + 4096
+print(torch.cuda.memory_allocated())
 
+# 输入定义
+inputs = torch.tensor([[1.0]*1024]*1024).cuda() # shape = (1024,1024) # + 4194304
+print(torch.cuda.memory_allocated())
+
+# 前向传播
+loss = sum(linear2(linear1(inputs))) # shape = (1) # memory + 4194304 + 512
+print(torch.cuda.memory_allocated())
+
+# 后向传播
+loss.backward() # memory - 4194304 + 4194304 + 4096
+print(torch.cuda.memory_allocated())
+
+# 再来一次~
+loss = sum(linear2(linear1(inputs))) # shape = (1) # memory + 4194304  (512没了，因为loss的ref还在)
+print(torch.cuda.memory_allocated())
+loss.backward() # memory - 4194304
+print(torch.cuda.memory_allocated())
