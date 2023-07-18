@@ -161,7 +161,7 @@ class LOMOTrainer:
                     if self.training_args.save_strategy == 'steps' and self.global_step % self.training_args.save_steps == 0:
                         self.save_model(self.global_step, loss.item(), exact_dir=self.training_args.output_dir)
 
-                    if epoch == self.training_args.num_train_epochs-1 and loss.item() <= 0.46:
+                    if epoch == self.training_args.num_train_epochs-1 and loss.item() <= 0.26:
                         self.save_model(self.global_step, loss.item(), exact_dir=self.training_args.special_output_dir)
 
                     if self.training_args.do_eval and self.training_args.evaluation_strategy == 'steps' and \
