@@ -422,7 +422,7 @@ class LOMOTrainer:
 
             with open(os.path.join(output_dir, f'pytorch_model.bin'), 'wb') as f:
                 torch.save(state_dict, f)
-                with open(Path.joinpath(output_dir, f'loss{loss}')):
+                with open(os.path.join(output_dir, f'loss{loss}'), 'w', encoding='utf8') as lossRecord:
                     pass
-                print(f"Save model to {output_dir}.")
+                print(f"Save model to {output_dir}, with loss:{loss}")
         torch.distributed.barrier()
