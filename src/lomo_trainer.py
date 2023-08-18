@@ -139,12 +139,6 @@ class LOMOTrainer:
                         )
                         loss = get_loss(outs.logits, batch['labels'], self.training_args.clip_loss_value)
 
-                    # scaled_loss = loss * self.loss_scaler.loss_scale
-                    #
-                    # scaled_loss.backward()
-                    # # update the last one since the hook function will not be called for the last parameter
-                    # self.grad_func(0)
-                    # self.loss_scaler.update_scale(overflow=False)
                     self.optimizer.fused_backward(loss, self.lr)
                     self.model.optimizer.get_param_coordinator(training=True).reset_step()
 
