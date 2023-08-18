@@ -118,7 +118,7 @@ class LOMOTrainer:
                         if self.optimizer.loss_scaler and self.optimizer.loss_scaler.has_overflow_serial:
                             print(f"Gradient overflow, skipping step {self.global_step}")
                             self.model.optimizer.get_param_coordinator(training=True).reset_step()
-                            torch.distributed.all_reduce(loss, op=torch.distributed.ReduceOp.AVG, async_op=True)
+                            torch.distributed.all_reduce(loss, op=torch.distributed.ReduceOp.AVG, async_op=False)
                             tqb.set_postfix({'loss': loss.item()})
                             if self.allow_print:
                                 self.wandb.log(
@@ -148,7 +148,7 @@ class LOMOTrainer:
                     self.optimizer.fused_backward(loss, self.lr)
                     self.model.optimizer.get_param_coordinator(training=True).reset_step()
 
-                    torch.distributed.all_reduce(loss, op=torch.distributed.ReduceOp.AVG, async_op=True)
+                    torch.distributed.all_reduce(loss, op=torch.distributed.ReduceOp.AVG, async_op=False)
                     tqb.set_postfix({'loss': loss.item()})
                     if self.allow_print:
                         self.wandb.log(
@@ -164,7 +164,7 @@ class LOMOTrainer:
                         self.save_model(self.global_step, loss.item(), exact_dir=self.training_args.output_dir)
 
                     if epoch == self.training_args.num_train_epochs-1:
-                        torch.distributed.all_reduce(loss, op=torch.distributed.ReduceOp.AVG, async_op=True)
+                        torch.distributed.all_reduce(loss, op=torch.distributed.ReduceOp.AVG, async_op=False)
                         if loss.item() <= 0.5:
                             self.save_model(self.global_step, loss.item(), exact_dir=self.training_args.special_output_dir)
 
