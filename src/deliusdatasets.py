@@ -30,7 +30,7 @@ class CustomDataset(Dataset):
         
         save_file = os.path.join(save_dir, f"{split}.pt")
         if data_args.refresh or not os.path.exists(save_file):
-            dataset = load_dataset('json', data_files=f"{data_args.data_dir}/{data_args.data_filename}", split=split)
+            dataset = load_dataset('json', data_files=f"{data_args.data_dir}/{data_args.data_filename}", split=split, streaming=True)
             self.data = self.process(dataset, save_file)
         else:
             print('Loading data from', save_file)
