@@ -44,12 +44,8 @@ class CustomDataset(Dataset):
     def process(self, dataset, save_file):
         datas = []
         for data in dataset:
-            instruction = data['Instruction']
-            inputing = data['Input']
-            response = data['Response']
-
-            def _tokenize_fn(instruction, inputing, response):
-                example = "USER:%s\n%s\nASSISTANT:%s" % (instruction, inputing, response)
+            def _tokenize_fn(Instruction, Input, Response):
+                example = "USER:%s\n%s\nASSISTANT:%s" % (Instruction, Input, Response)
                 example_tokenized = self.tokenizer.encode(example, truncation=True, max_length = self.data_args.data_max_length)
                 example_tokenized += [self.tokenizer.eos_token_id]
                 instruction_tokenized = self.tokenizer.encode(re.search(r"(.|\n)*ASSISTANT:", example).group())
@@ -61,15 +57,13 @@ class CustomDataset(Dataset):
                     labels[:len(instruction_tokenized) -1] = IGNORE_INDEX
                 return input_ids, labels
         
-            input_ids, labels = _tokenize_fn(instruction, inputing, response)
+            input_ids, labels = _tokenize_fn(**data)
 
-            datas.append({
-                "input_ids": input_ids,
-                "labels": labels,
-                "Instruction": instruction,
-                "Input": inputing,
-                "Response": response
-            })
+            datas.append(dict(
+                input_ids=input_ids,
+                labels=labels,
+                **data
+            ))
 
         if self.sample_size > 0 and len(data) > self.sample_size:
             random.seed(REPRODUCIBILITY_SEED)
