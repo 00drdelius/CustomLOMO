@@ -24,17 +24,17 @@ class CustomDataset(Dataset):
         self.sample_size = 1000
         self.max_length = data_args.data_max_length
         
-        save_dir = os.path.join(data_args.data_dir, data_args.dataset_name)
+        save_dir = os.path.join(data_args.data_dir, data_args.data_filename.split(".")[0])
         if not os.path.exists(save_dir):
             os.makedirs(save_dir, exist_ok=True)
         
         save_file = os.path.join(save_dir, f"{split}.pt")
         if data_args.refresh or not os.path.exists(save_file):
             dataset = load_dataset('json', data_files=f"{data_args.data_dir}/{data_args.data_filename}", split=split, streaming=True)
-            self.data = self.process(dataset, save_file)
+            self.datas = self.process(dataset, save_file)
         else:
             print('Loading data from', save_file)
-            self.data = torch.load(save_file)
+            self.datas = torch.load(save_file)
 
         print("Data size:", len(self.data))
         print("Data format:", self.data[0])
@@ -52,7 +52,7 @@ class CustomDataset(Dataset):
                 example = "USER:%s\n%s\nASSISTANT:%s" % (instruction, inputing, response)
                 example_tokenized = self.tokenizer.encode(example, truncation=True, max_length = self.data_args.data_max_length)
                 example_tokenized += [self.tokenizer.eos_token_id]
-                instruction_tokenized = self.tokenizer.encode(re.search(r"(.|\n)*(?=ASSISTANT)", example).group())
+                instruction_tokenized = self.tokenizer.encode(re.search(r"(.|\n)*ASSISTANT:", example).group())
 
                 input_ids = example_tokenized
                 labels = copy.deepcopy(input_ids)
@@ -87,8 +87,8 @@ class CustomDataset(Dataset):
     
     def __getitem__(self, index) -> Any:
        return {
-           'input_ids':self.data[index]['input_ids'],
-           'labels':self.data[index]['labels']
+           'input_ids':self.datas[index]['input_ids'],
+           'labels':self.datas[index]['labels']
        }
     
 if __name__ == '__main__':
@@ -99,7 +99,6 @@ if __name__ == '__main__':
     parser = HfArgumentParser((ModelArguments, DataArguments))
     model_args, data_args = parser.parse_args_into_dataclasses()
     model_args.model_name_or_path = './llamaConfig'
-    data_args.dataset_name = 'test'
     data_args.refresh = True
     train_on_inputs = False
     data_args.data_max_length = 512

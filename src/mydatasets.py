@@ -99,10 +99,6 @@ class MyDataset(Dataset):
         print('Saving data to', save_file)
         return data
 
-    def concat_exemplars(self, exemplars):
-        exemplar_prompts = [f"{e['source']}{e['target'][0]}" for e in exemplars]
-        exemplars = "\n\n".join(exemplar_prompts)
-        return exemplars
 
     def __len__(self):
         return len(self.data)
