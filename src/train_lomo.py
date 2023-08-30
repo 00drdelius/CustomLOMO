@@ -42,14 +42,19 @@ def train():
     else:
         model_args, data_args, training_args, wandb_args = parser.parse_args_into_dataclasses()
     set_seed(training_args.seed)
+    
+    default_type=None
     if training_args.bf16:
-        torch.set_default_dtype(torch.bfloat16)
+        default_type=torch.bfloat16
+        torch.set_default_dtype(default_type)
     elif training_args.fp16:
-        torch.set_default_dtype(torch.float16)
+        default_type=torch.float16
+        torch.set_default_dtype(default_type)
     elif training_args.bf16 and training_args.fp16:
+        default_type=torch.float16
         torch.set_default_dtype(torch.float16)
     print("default type:", torch.get_default_dtype())
-    
+
     model_name = model_args.model_name_or_path.split('/')[-1]
     tag_name = '_'.join([data_args.dataset_name, model_name, training_args.tag] if training_args.tag else [data_args.dataset_name, model_name])
     hparam_name = 'output'
@@ -95,6 +100,7 @@ def train():
         local_files_only=True,
         config=config,
         trust_remote_code = True
+        torch_dtype=default_type
     )
 
     tokenizer = AutoTokenizer.from_pretrained(
