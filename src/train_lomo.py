@@ -42,7 +42,7 @@ def train():
     else:
         model_args, data_args, training_args, wandb_args = parser.parse_args_into_dataclasses()
     set_seed(training_args.seed)
-    
+
     default_type=None
     if training_args.bf16:
         default_type=torch.bfloat16
@@ -99,7 +99,7 @@ def train():
         model_args.model_name_or_path,
         local_files_only=True,
         config=config,
-        trust_remote_code = True
+        trust_remote_code = True,
         torch_dtype=default_type
     )
 
