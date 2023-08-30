@@ -36,14 +36,16 @@ def compute_metrics(all_pred, eval_dataset, eval_prefix=None):
 
 def train():
     # ========== 1. logs and args ==========
-    torch.set_default_dtype(torch.float16)
     parser = HfArgumentParser((ModelArguments, DataArguments, MyTrainingArguments, WandbArguments))
     if sys.argv[-1].endswith(".yaml"):
         model_args, data_args, training_args, wandb_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[-1]))
     else:
         model_args, data_args, training_args, wandb_args = parser.parse_args_into_dataclasses()
     set_seed(training_args.seed)
-
+    if training_args.bf16:
+        torch.set_default_dtype(torch.bfloat16)
+    elif training_args.fp16:
+        torch.set_default_dtype(torch.float16)
     model_name = model_args.model_name_or_path.split('/')[-1]
     tag_name = '_'.join([data_args.dataset_name, model_name, training_args.tag] if training_args.tag else [data_args.dataset_name, model_name])
     hparam_name = 'output'

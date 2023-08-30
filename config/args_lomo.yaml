@@ -29,6 +29,7 @@ lr_scheduler_type: 'linear'
 warmup: 0.01
 clip_grad_norm: 1.0
 seed: 42
+fp16: true
 #bf16: true
 remove_unused_columns: false
 load_best_model_at_end: false
