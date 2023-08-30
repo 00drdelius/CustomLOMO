@@ -45,10 +45,10 @@ class CustomDataset(Dataset):
         datas = []
         for data in dataset:
             def _tokenize_fn(Instruction, Input, Response):
-                example = "USER:%s\n%s\nASSISTANT:%s" % (Instruction, Input, Response)
-                example_tokenized = self.tokenizer.encode(example, truncation=True, max_length = self.data_args.data_max_length)
+                example = "%s\n%s\n</s>%s" % (Instruction, Input, Response)
+                example_tokenized = [self.tokenizer.bos_token_id]+self.tokenizer.encode(example, truncation=True, max_length = self.data_args.data_max_length)
                 example_tokenized += [self.tokenizer.eos_token_id]
-                instruction_tokenized = self.tokenizer.encode(re.search(r"(.|\n)*ASSISTANT:", example).group())
+                instruction_tokenized = self.tokenizer.encode(re.search(r"(.|\n)*</s>", example).group())
 
                 input_ids = example_tokenized
                 labels = copy.deepcopy(input_ids)
