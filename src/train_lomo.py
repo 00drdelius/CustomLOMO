@@ -46,6 +46,9 @@ def train():
         torch.set_default_dtype(torch.bfloat16)
     elif training_args.fp16:
         torch.set_default_dtype(torch.float16)
+    elif training_args.bf16 and training_args.fp16:
+        torch.set_default_dtype(torch.float16)
+
     model_name = model_args.model_name_or_path.split('/')[-1]
     tag_name = '_'.join([data_args.dataset_name, model_name, training_args.tag] if training_args.tag else [data_args.dataset_name, model_name])
     hparam_name = 'output'
