@@ -36,10 +36,10 @@ class CustomDataset(Dataset):
             print('Loading data from', save_file)
             self.datas = torch.load(save_file)
 
-        print("Data size:", len(self.data))
-        print("Data format:", self.data[0])
-        print("Max length:", max([len(d['input_ids']) for d in self.data])) if self.split == 'train' else \
-            print('Max length:', max([max([len(d) for d in dd['input_ids']]) for dd in self.data]))
+        print("Data size:", len(self.datas))
+        print("Data format:", self.datas[0])
+        print("Max length:", max([len(d['input_ids']) for d in self.datas])) if self.split == 'train' else \
+            print('Max length:', max([max([len(d) for d in dd['input_ids']]) for dd in self.datas]))
 
     def process(self, dataset, save_file):
         datas = []
@@ -77,7 +77,7 @@ class CustomDataset(Dataset):
         return datas
     
     def __len__(self):
-        return len(self.data)
+        return len(self.datas)
     
     def __getitem__(self, index) -> Any:
        return {
