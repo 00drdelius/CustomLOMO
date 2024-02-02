@@ -1,1 +1,1 @@
-## LOMO with Customizede function
+## LOMO with Customized function
